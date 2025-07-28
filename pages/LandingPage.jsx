@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const LandingPage = (props) => {
+
+    const navigate = useNavigate();
     const [input1, onChangeInput1] = useState('');
     const [input2, onChangeInput2] = useState('');
     const [input3, onChangeInput3] = useState('');
@@ -10,17 +13,32 @@ const LandingPage = (props) => {
 
     const [userPrice, setUserPrice] = useState(100);
 
+    const [destination, setDestination] = useState('');
+
+    const [guest, setGuest] = useState('Adult');
 
     const [destinationClicked, setDestinationClicked] = useState(false);
 
-    const [checkInClicked, setCheckInClicked] = useState('')
-    const [selectedDateCout, setSelectedDateCout] = useState('')
+    const [selectedDateCout, setSelectedDateCout] = useState('');
 
-    const [checkOutClicked, setCheckOutClicked] = useState('')
-    const [selectedDateCin, setSelectedDateCin] = useState('')
+    const [selectedDateCin, setSelectedDateCin] = useState('');
 
 
-    
+    const handleSearch = async () => {
+
+        const formData = {
+            "location": destination,
+            "price": userPrice,
+            "check_in": selectedDateCin,
+            "check_out": selectedDateCout,
+            'guest': guest,
+        }
+        const res = await axios.post('https://hassanabbasnaqvi.pythonanywhere.com//api/submit-booking/', formData);
+        navigate(`/search?request_id=${res.data.request_id}`);
+    }
+
+
+
 
     return (
         <div className="contain">
@@ -35,13 +53,6 @@ const LandingPage = (props) => {
                         <span className="text6" >
                             {"The best hotels selling platform"}
                         </span>
-                        <div className="column3">
-                            <span className="text7" >
-                                {"We have all best & patient Vendors selling group tickets"}
-                            </span>
-                            <div className="box">
-                            </div>
-                        </div>
                     </div>
                     <div className="absolute-row-view">
                         <img
@@ -53,18 +64,7 @@ const LandingPage = (props) => {
                             <span className="text8" onClick={() => { setDestinationClicked(!destinationClicked) }} >
                                 {"Destination"}
                             </span>
-                            <div className="dropdown">
-                                {destinationClicked && (
-                                    <ul className="dropdown-menu">
-                                        <li>Naran</li>
-                                        <li>Kaghan</li>
-                                        <li>Hunza</li>
-                                    </ul>
-                                )}
-                            </div>
-                            <span className="text9" >
-                                {"Select"}
-                            </span>
+                            <input style={{border: "1px black solid"}} value={destination} onChange={(e)=>{setDestination(e.target.value)}} placeholder="enter area" type="text" />
                         </div>
                         <img
                             style={{ "transform": destinationClicked ? "rotate(180deg)" : "" }}
@@ -76,21 +76,16 @@ const LandingPage = (props) => {
                             className="image2"
                         />
                         <div className="column5">
-                            <span className="text8" onClick={()=>{setCheckInClicked(!checkInClicked)}} >
+                            <span className="text8">
                                 {"Check in"}
-                            </span>
-                            <span className="text9" >
-                                {"Select"}
                             </span>
 
                             <div className="dropdown">
-                                {checkInClicked && (
                                     <input
                                         type="date"
                                         value={selectedDateCin}
                                         onChange={(e) => setSelectedDateCin(e.target.value)}
                                     />
-                                )}
                             </div>
                         </div>
                         <img
@@ -102,20 +97,14 @@ const LandingPage = (props) => {
                             className="image5"
                         />
                         <div className="column6">
-                            <span className="text8" onClick={(e)=>setCheckOutClicked(!checkOutClicked)}>
+                            <span className="text8">
                                 {"Check out"}
                             </span>
-                            <span className="text9" >
-                                {"Select"}
-                            </span>
-
-                            {checkOutClicked && (
-                                    <input
-                                        type="date"
-                                        value={selectedDateCout}
-                                        onChange={(e) => setSelectedDateCout(e.target.value)}
-                                    />
-                                )}
+                                <input
+                                    type="date"
+                                    value={selectedDateCout}
+                                    onChange={(e) => setSelectedDateCout(e.target.value)}
+                                />
                         </div>
                         <img
                             src={"https://storage.googleapis.com/tagjs-prod.appspot.com/v1/l7vQbb0GE2/0feifp07_expires_30_days.png"}
@@ -126,7 +115,11 @@ const LandingPage = (props) => {
                                 {"Guest"}
                             </span>
                             <span className="text9" >
-                                {"Select"}
+                                <select value={guest} onChange={(e)=>{setGuest(e.target.value)}}>
+                                    <option value="Adult">Adult</option>
+                                    <option value="Child">Child</option>
+                                    <option value="Infant">Infant</option>
+                                </select>
                             </span>
                         </div>
                         <img
@@ -143,7 +136,7 @@ const LandingPage = (props) => {
                                         backgroundImage: 'url(https://storage.googleapis.com/tagjs-prod.appspot.com/v1/l7vQbb0GE2/d791vtf5_expires_30_days.png)',
                                     }}
                                 >
-                                    <span className="text11" onClick={(e)=>setUserPrice(userPrice-100)} >
+                                    <span className="text11" onClick={(e) => setUserPrice(userPrice - 100)} >
                                         {"-"}
                                     </span>
                                 </div>
@@ -157,18 +150,18 @@ const LandingPage = (props) => {
                                 backgroundImage: 'url(https://storage.googleapis.com/tagjs-prod.appspot.com/v1/l7vQbb0GE2/8jhdfyyu_expires_30_days.png)',
                             }}
                         >
-                            <span className="text11"  onClick={(e)=>setUserPrice(userPrice+100)}>
+                            <span className="text11" onClick={(e) => setUserPrice(userPrice + 100)}>
                                 {"+"}
                             </span>
                         </div>
                     </div>
                     <div className="absolute-view">
-                        <Link className="text13" to={"search"}>
-                        <span >
-                            {"Search Now"}
-                        </span>
+                        <Link className="text13" onClick={handleSearch}>
+                            <span >
+                                {"Search Now"}
+                            </span>
                         </Link>
-                        
+
                     </div>
                 </div>
                 <div className="row-view3">
@@ -282,7 +275,7 @@ const LandingPage = (props) => {
                         </span>
                     </button>
                 </div>
-                
+
             </div>
         </div>
     )
