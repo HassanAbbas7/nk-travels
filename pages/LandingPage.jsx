@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -11,12 +11,38 @@ const LandingPage = (props) => {
     const [input3, onChangeInput3] = useState('');
     const [input4, onChangeInput4] = useState('');
 
+    const [guests, setGuests] = useState({
+        adults: 1,
+        children: 0,
+        infants: 0,
+    });
+
+    const [open, setOpen] = useState(false);
+    const dropdownRef = useRef();
+
+    const handleChange = (type, delta) => {
+        setGuests((prev) => {
+            const newCount = Math.max(
+                type === "adults" ? 1 : 0,
+                prev[type] + delta
+            );
+            return { ...prev, [type]: newCount };
+        });
+    };
+
+    // Close on outside click
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     const [userPrice, setUserPrice] = useState(100);
-
     const [destination, setDestination] = useState('');
-
-    const [guest, setGuest] = useState('Adult');
-
     const [destinationClicked, setDestinationClicked] = useState(false);
 
     const [selectedDateCout, setSelectedDateCout] = useState('');
@@ -31,7 +57,7 @@ const LandingPage = (props) => {
             "price": userPrice,
             "check_in": selectedDateCin,
             "check_out": selectedDateCout,
-            'guest': guest,
+            'guest': guests,
         }
         const res = await axios.post('https://hassanabbasnaqvi.pythonanywhere.com//api/submit-booking/', formData);
         navigate(`/search?request_id=${res.data.request_id}`);
@@ -64,7 +90,7 @@ const LandingPage = (props) => {
                             <span className="text8" onClick={() => { setDestinationClicked(!destinationClicked) }} >
                                 {"Destination"}
                             </span>
-                            <input style={{border: "1px black solid"}} value={destination} onChange={(e)=>{setDestination(e.target.value)}} placeholder="enter area" type="text" />
+                            <input style={{ border: "1px black solid" }} value={destination} onChange={(e) => { setDestination(e.target.value) }} placeholder="enter area" type="text" />
                         </div>
                         <img
                             style={{ "transform": destinationClicked ? "rotate(180deg)" : "" }}
@@ -81,11 +107,11 @@ const LandingPage = (props) => {
                             </span>
 
                             <div className="dropdown">
-                                    <input
-                                        type="date"
-                                        value={selectedDateCin}
-                                        onChange={(e) => setSelectedDateCin(e.target.value)}
-                                    />
+                                <input
+                                    type="date"
+                                    value={selectedDateCin}
+                                    onChange={(e) => setSelectedDateCin(e.target.value)}
+                                />
                             </div>
                         </div>
                         <img
@@ -100,27 +126,63 @@ const LandingPage = (props) => {
                             <span className="text8">
                                 {"Check out"}
                             </span>
-                                <input
-                                    type="date"
-                                    value={selectedDateCout}
-                                    onChange={(e) => setSelectedDateCout(e.target.value)}
-                                />
+                            <input
+                                type="date"
+                                value={selectedDateCout}
+                                onChange={(e) => setSelectedDateCout(e.target.value)}
+                            />
                         </div>
                         <img
                             src={"https://storage.googleapis.com/tagjs-prod.appspot.com/v1/l7vQbb0GE2/0feifp07_expires_30_days.png"}
                             className="image6"
                         />
-                        <div className="column7">
-                            <span className="text8" >
-                                {"Guest"}
-                            </span>
-                            <span className="text9" >
-                                <select value={guest} onChange={(e)=>{setGuest(e.target.value)}}>
-                                    <option value="Adult">Adult</option>
-                                    <option value="Child">Child</option>
-                                    <option value="Infant">Infant</option>
-                                </select>
-                            </span>
+                        <div className="relative inline-block" ref={dropdownRef}>
+                            <div
+                                onClick={() => setOpen((prev) => !prev)}
+                                className="text8"
+                            >
+                                <span>Guests</span>
+                            </div>
+
+                            {open && (
+                                <div className="absolute z-50 mt-2 w-72 p-4 bg-white shadow-lg rounded-xl text-sm right-0">
+                                    {[
+                                        { label: "Adults", age: "Ages 13 or above", key: "adults" },
+                                        { label: "Children", age: "Ages 2 – 12", key: "children" },
+                                        { label: "Infants", age: "Under 2", key: "infants" },
+                                    ].map(({ label, age, key }) => (
+                                        <div
+                                            key={key}
+                                            className="flex justify-between items-center py-3 border-b last:border-b-0"
+                                        >
+                                            <div>
+                                                <div className="font-medium">{label}</div>
+                                                <div className="text-gray-500">{age}</div>
+                                            </div>
+                                            <div className="flex items-center space-x-3">
+                                                <button
+                                                    onClick={() => handleChange(key, -1)}
+                                                    disabled={guests[key] === (key === "adults" ? 1 : 0)}
+                                                    className={`w-8 h-8 flex items-center justify-center rounded-full border 
+                    ${guests[key] === (key === "adults" ? 1 : 0)
+                                                            ? "text-gray-300 border-gray-300"
+                                                            : "text-black border-black"
+                                                        }`}
+                                                >
+                                                    −
+                                                </button>
+                                                <span className="w-4 text-center">{guests[key]}</span>
+                                                <button
+                                                    onClick={() => handleChange(key, 1)}
+                                                    className="w-8 h-8 flex items-center justify-center rounded-full border text-black border-black"
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                         <img
                             src={"https://storage.googleapis.com/tagjs-prod.appspot.com/v1/l7vQbb0GE2/zvesq43m_expires_30_days.png"}
