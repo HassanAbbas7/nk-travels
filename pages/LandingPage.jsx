@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+
 const LandingPage = (props) => {
 
     const navigate = useNavigate();
@@ -10,6 +11,8 @@ const LandingPage = (props) => {
     const [input2, onChangeInput2] = useState('');
     const [input3, onChangeInput3] = useState('');
     const [input4, onChangeInput4] = useState('');
+
+    const [contact, setContact] = useState();
 
     const [guests, setGuests] = useState({
         adults: 1,
@@ -30,7 +33,6 @@ const LandingPage = (props) => {
         });
     };
 
-    // Close on outside click
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -48,9 +50,16 @@ const LandingPage = (props) => {
     const [selectedDateCout, setSelectedDateCout] = useState('');
 
     const [selectedDateCin, setSelectedDateCin] = useState('');
-
+    const [phone, setPhone] = useState('');
 
     const handleSearch = async () => {
+
+        // validate phone number
+        const phoneRegex = /^03[0-9]{9}$/;
+        if (!phoneRegex.test(phone)) {
+            alert("Please enter a valid phone number in the format 03XXXXXXXXX");
+            return;
+        }
 
         const formData = {
             "location": destination,
@@ -58,11 +67,27 @@ const LandingPage = (props) => {
             "check_in": selectedDateCin,
             "check_out": selectedDateCout,
             'guest': guests,
+            phone: phone,
         }
         const res = await axios.post('https://hassanabbasnaqvi.pythonanywhere.com//api/submit-booking/', formData);
         navigate(`/search?request_id=${res.data.request_id}`);
     }
 
+
+    const handleChekInDate = (e)=>{
+        if (new Date(e.target.value) >= new Date(selectedDateCout)){
+            setSelectedDateCout("");
+
+        }
+        setSelectedDateCin(e.target.value)
+    }
+
+    const handleChekOutDate = (e)=>{
+        if (new Date(selectedDateCin) >= new Date(e.target.value) ){
+            setSelectedDateCin("");
+        }
+        setSelectedDateCout(e.target.value);
+    }
 
 
 
@@ -92,6 +117,22 @@ const LandingPage = (props) => {
                             </span>
                             <input style={{ border: "1px black solid" }} value={destination} onChange={(e) => { setDestination(e.target.value) }} placeholder="enter area" type="text" />
                         </div>
+
+                        <div className="column4" style={{ marginTop: 8 }}>
+                <span className="text8">
+                    {"Contact Number"}
+                </span>
+                <input
+                    style={{ border: "1px black solid" }}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="03XXXXXXXXX"
+                    type="tel"
+                    pattern="^03[0-9]{9}$"
+                    maxLength={11}
+                />
+                {/* Optionally, you can add validation/error message here */}
+            </div>
                         <img
                             style={{ "transform": destinationClicked ? "rotate(180deg)" : "" }}
                             src={"https://storage.googleapis.com/tagjs-prod.appspot.com/v1/l7vQbb0GE2/yhrsufwl_expires_30_days.png"}
@@ -110,7 +151,7 @@ const LandingPage = (props) => {
                                 <input
                                     type="date"
                                     value={selectedDateCin}
-                                    onChange={(e) => setSelectedDateCin(e.target.value)}
+                                    onChange={handleChekInDate}
                                 />
                             </div>
                         </div>
@@ -129,7 +170,7 @@ const LandingPage = (props) => {
                             <input
                                 type="date"
                                 value={selectedDateCout}
-                                onChange={(e) => setSelectedDateCout(e.target.value)}
+                                onChange={handleChekOutDate}
                             />
                         </div>
                         <img
